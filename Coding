@@ -1,0 +1,156 @@
+---------------------------------------------------------------------------------------------
+//This is the coding for NodeMCU
+----------------------------------------------------------------------------------------------
+#include "ESP8266WiFi.h"
+#include "DHT.h"
+
+#define DHTPIN 4     // what digital pin the DHT22 is conected to
+#define DHTTYPE DHT22   // there are multiple kinds of DHT sensors
+
+DHT dht(DHTPIN, DHTTYPE);
+
+
+String apiKey = "5IGR0Z2Q5YLRRMOB";     //  Enter your Write API key from ThingSpeak
+
+const char *ssid =  "tabibdaribarat";     // replace with your wifi ssid and wpa2 key
+const char *pass =  "fahmikacak";
+const char* server = "api.thingspeak.com";
+int fan_control = 5;
+int pump_control= 0;
+
+
+
+WiFiClient client;
+ 
+void setup() 
+{
+       pinMode(fan_control, OUTPUT);
+       pinMode(pump_control, OUTPUT);    
+       Serial.begin(115200);
+       delay(10);
+       dht.begin();
+ 
+       Serial.println("Connecting to ");
+       Serial.println(ssid);
+ 
+ 
+       WiFi.begin(ssid, pass);
+ 
+      while (WiFi.status() != WL_CONNECTED) 
+     {
+            delay(500);
+            Serial.print(".");
+     }
+      Serial.println("");
+      Serial.println("WiFi connected");
+ 
+}
+ 
+void loop() 
+{
+  
+      float h = dht.readHumidity();
+      float t = dht.readTemperature();
+      
+              if (isnan(h) || isnan(t)) 
+                 {
+                     Serial.println("Failed to read from DHT sensor!");
+                      return;
+                 }
+
+                         if (client.connect(server,80))   //   "184.106.153.149" or api.thingspeak.com
+                      {  
+                            
+                             String postStr = apiKey;
+                             postStr +="&field1=";
+                             postStr += String(t);
+                             postStr +="&field2=";
+                             postStr += String(h);
+                             postStr += "\r\n\r\n";
+ 
+                             client.print("POST /update HTTP/1.1\n");
+                             client.print("Host: api.thingspeak.com\n");
+                             client.print("Connection: close\n");
+                             client.print("X-THINGSPEAKAPIKEY: "+apiKey+"\n");
+                             client.print("Content-Type: application/x-www-form-urlencoded\n");
+                             client.print("Content-Length: ");
+                             client.print(postStr.length());
+                             client.print("\n\n");
+                             client.print(postStr);
+ 
+                             Serial.print("Temperature: ");
+                             Serial.print(t);
+                             Serial.print(" degrees Celcius, Humidity: ");
+                             Serial.print(h);
+                             Serial.println("%. Send to Thingspeak.");
+                        }
+          client.stop();
+ 
+          Serial.println("Waiting...");
+
+
+          if(t >= 25)
+          {
+            digitalWrite(fan_control,HIGH);
+            Serial.print("Fan on\n");
+          }
+
+          if(t < 25)
+          {
+            digitalWrite(fan_control,LOW);
+            Serial.print("Fan off\n");
+          }
+
+          if(h < 80)
+          {
+            digitalWrite(pump_control,HIGH);
+            Serial.print("pump on\n");
+          }
+
+           if(h >= 80)
+          {
+            digitalWrite(pump_control,LOW);
+            Serial.print("pump off\n");
+          }
+  
+  // thingspeak needs minimum 15 sec delay between updates, i've set it to 30 seconds
+  delay(10000);
+}
+
+
+--------------------------------------------------------------------------------------------
+This is the coding for ArduinoUno
+---------------------------------------------------------------------------------------------
+
+
+    int fan_control = 5;
+    int pump_control = 6;
+    int fan = 2;
+    int pump = 4;
+     
+    // the setup routine runs once when you press reset:
+    void setup() {                
+      // initialize the digital pin as an output.
+      pinMode(fan, OUTPUT);  
+      pinMode(pump, OUTPUT);
+      pinMode(fan_control, INPUT); 
+      pinMode(pump_control, INPUT);  
+    }
+     
+    // the loop routine runs over and over again forever:
+    void loop() {
+
+      digitalWrite(pump, HIGH);
+      digitalWrite(fan, HIGH);
+
+      if(digitalRead(fan_control)==HIGH)
+      {
+        digitalWrite(fan,LOW);
+      }
+
+      
+      if(digitalRead(pump_control)==HIGH)
+      {
+        digitalWrite(pump,LOW);
+      }
+    }
