@@ -1,0 +1,37 @@
+
+--------------------------------------------------------------------------------------------
+This is the coding for ArduinoUno
+---------------------------------------------------------------------------------------------
+
+
+    int fan_control = 5;
+    int pump_control = 6;
+    int fan = 2;
+    int pump = 4;
+     
+    // the setup routine runs once when you press reset:
+    void setup() {                
+      // initialize the digital pin as an output.
+      pinMode(fan, OUTPUT);  
+      pinMode(pump, OUTPUT);
+      pinMode(fan_control, INPUT); 
+      pinMode(pump_control, INPUT);  
+    }
+     
+    // the loop routine runs over and over again forever:
+    void loop() {
+
+      digitalWrite(pump, HIGH);
+      digitalWrite(fan, HIGH);
+
+      if(digitalRead(fan_control)==HIGH)
+      {
+        digitalWrite(fan,LOW);
+      }
+
+      
+      if(digitalRead(pump_control)==HIGH)
+      {
+        digitalWrite(pump,LOW);
+      }
+    }
